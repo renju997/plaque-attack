@@ -272,6 +272,7 @@
     border-radius: 18px;
     box-shadow: var(--shadow);
     overflow: hidden;
+    cursor: pointer;
     touch-action: manipulation;
     -webkit-user-select: none;
     user-select: none;
@@ -303,18 +304,15 @@
   .germ.hit { transition: transform 140ms ease-in, opacity 140ms ease-in; transform: translate(-50%, 4%) scale(0.15) rotate(25deg); opacity: 0; }
   .germ.escaped { transition: transform 220ms ease-in, opacity 220ms ease-in; transform: translate(-50%, 12%) scale(0.3); opacity: 0; }
 
-  /* generous, constant-size touch target: not animated, so it's fully tappable the instant a hole pops -
-     no need to wait for (or precisely land on) the sprite's own scale-in animation */
+  /* geometry reference only (pointer-events: none) -- the board's single delegated
+     listener reads each hit-zone's rect to test/resolve taps, rather than this element
+     receiving them directly; see the comment above board.addEventListener("pointerdown"). */
   .hit-zone {
     position: absolute;
     left: 50%;
     bottom: 0;
     transform: translateX(-50%);
-    z-index: 3;
-    cursor: pointer;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-    -webkit-touch-callout: none;
+    pointer-events: none;
   }
 
   .poof {
@@ -681,28 +679,20 @@
       var hitZone = document.createElement("div");
       hitZone.className = "hit-zone";
       // sized to fully cover the germ (which is always 84% of the hole box, per its own
-      // width:84%+aspect-ratio:1 CSS) with margin to spare, on every row. Rows can geometrically
-      // overlap the row above them this way, but that's harmless: pointer-events is toggled on
-      // only while THIS hole's own germ is up (see popUp/miss/whack), so an inactive neighbor's
-      // hit-zone never intercepts a click meant for the active sprite.
+      // width:84%+aspect-ratio:1 CSS) with margin to spare, on every row. Adjacent rows'
+      // hit-zones can and do geometrically overlap this way -- that's fine, since clicks
+      // aren't resolved by DOM/z-order but by the board-level listener below, which picks
+      // whichever clickable hole's germ center is nearest the click among all candidates.
+      // This is what lets two overlapping sprites stay independently tappable at once.
       hitZone.style.width = "92%";
       hitZone.style.height = "92%";
-      hitZone.style.pointerEvents = "none";
 
       hole.appendChild(germ);
       hole.appendChild(poof);
       hole.appendChild(hitZone);
       board.appendChild(hole);
 
-      (function (index, germEl, poofEl) {
-        hitZone.addEventListener("pointerdown", function (e) {
-          e.stopPropagation();
-          spawnImpactBurst(e);
-          whack(index, germEl, poofEl);
-        });
-      })(i, germ, poof);
-
-      holes.push({ germ: germ, poof: poof, hitZone: hitZone, up: false, timer: null, index: i });
+      holes.push({ germ: germ, poof: poof, hitZone: hitZone, up: false, clickable: false, timer: null, clickableTimer: null, index: i });
     }
   }
 
@@ -734,9 +724,10 @@
 
   function popUp(hole) {
     hole.up = true;
+    hole.clickable = true;
+    clearTimeout(hole.clickableTimer);
     hole.germ.classList.remove("hit", "escaped");
     hole.germ.classList.add("up");
-    hole.hitZone.style.pointerEvents = "auto";
     difficultyStep();
     var upFor = state.upTime * (0.8 + Math.random() * 0.4);
     hole.timer = setTimeout(function () {
@@ -748,9 +739,12 @@
     hole.up = false;
     hole.germ.classList.remove("up");
     hole.germ.classList.add("escaped");
-    hole.hitZone.style.pointerEvents = "none";
     state.combo = 0;
     sfxMiss();
+    // grace period: stays tappable through its own escape-fade (matches the .germ.escaped
+    // transition duration), so a tap that lands just as it's ducking back down still counts
+    clearTimeout(hole.clickableTimer);
+    hole.clickableTimer = setTimeout(function () { hole.clickable = false; }, 220);
   }
 
   var CONFETTI_COLORS = ["var(--accent)", "var(--gold)", "var(--gum-deep)", "#4fc3f7", "#ffffff"];
@@ -775,13 +769,14 @@
     }
   }
 
-  function whack(index, germEl, poofEl) {
-    var hole = holes[index];
-    if (!state || !state.running || !hole.up) return;
+  function whack(hole) {
+    if (!state || !state.running || !hole.clickable) return;
+    var germEl = hole.germ, poofEl = hole.poof;
     hole.up = false;
+    hole.clickable = false;
     clearTimeout(hole.timer);
-    hole.hitZone.style.pointerEvents = "none";
-    germEl.classList.remove("up");
+    clearTimeout(hole.clickableTimer);
+    germEl.classList.remove("up", "escaped");
     germEl.classList.add("hit");
     burstConfetti(germEl.parentElement);
 
@@ -809,6 +804,32 @@
     board.appendChild(burst);
     setTimeout(function () { burst.remove(); }, 280);
   }
+
+  // Single delegated listener instead of one per hit-zone: adjacent rows' hit-zones can
+  // (and, given the art's spacing, must) overlap to fully cover each sprite's face, so
+  // resolving a tap by DOM/z-order alone would let one hole permanently shadow another
+  // whenever both are tappable at once. Instead, collect every currently-clickable hole
+  // whose hit-zone contains the tap, and award it to whichever one's germ center is
+  // physically closest to the tap point -- so overlapping sprites stay independently poppable.
+  board.addEventListener("pointerdown", function (e) {
+    var candidates = holes.filter(function (h) {
+      if (!h.clickable) return false;
+      var r = h.hitZone.getBoundingClientRect();
+      return e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+    });
+    if (!candidates.length) return;
+    var best = candidates[0];
+    var bestDist = Infinity;
+    candidates.forEach(function (h) {
+      var g = h.germ.getBoundingClientRect();
+      var cx = (g.left + g.right) / 2;
+      var cy = (g.top + g.bottom) / 2;
+      var dist = Math.pow(e.clientX - cx, 2) + Math.pow(e.clientY - cy, 2);
+      if (dist < bestDist) { bestDist = dist; best = h; }
+    });
+    spawnImpactBurst(e);
+    whack(best);
+  });
 
   function scheduleSpawn() {
     state.spawnHandle = setTimeout(function () {
@@ -845,9 +866,10 @@
     timeVal.classList.remove("timer-low");
     holes.forEach(function (h) {
       h.up = false;
+      h.clickable = false;
       clearTimeout(h.timer);
+      clearTimeout(h.clickableTimer);
       h.germ.classList.remove("up", "hit", "escaped");
-      h.hitZone.style.pointerEvents = "none";
     });
     overlay.style.display = "none";
     sfxStart();
@@ -867,9 +889,10 @@
     bgMusic.pause();
     holes.forEach(function (h) {
       clearTimeout(h.timer);
+      clearTimeout(h.clickableTimer);
       h.up = false;
+      h.clickable = false;
       h.germ.classList.remove("up");
-      h.hitZone.style.pointerEvents = "none";
     });
 
     var best = Number(localStorage.getItem(HIGH_KEY) || 0);
