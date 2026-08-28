@@ -660,6 +660,9 @@
       hole.className = "hole";
       hole.style.left = spot.x + "%";
       hole.style.top = (spot.y + spot.r) + "%";
+      // explicit stacking so nearer rows (further down the tray, higher index) always
+      // render in front of the rows behind them, regardless of DOM-order tie-breaking
+      hole.style.zIndex = i;
       var boxW = spot.w * 1.42;
       hole.style.width = boxW + "%";
       hole.style.height = (boxW * BOARD_ASPECT) + "%";
@@ -677,20 +680,14 @@
 
       var hitZone = document.createElement("div");
       hitZone.className = "hit-zone";
-      // size the hit-zone independently on each axis, as percentages of the .hole box itself
-      // (its containing block) -- generous width, but height capped by the gap to the row
-      // above so neighboring rows' hit-zones can never overlap and steal a click ("ghost" hits)
-      var holeHeightPct = boxW * BOARD_ASPECT; // hole's own height, in % of board (matches above)
-      var hzWidthPctOfHole = 92;
-      var hzHeightPctOfHole = 92; // natural/unconstrained default, matches width ratio
-      if (i >= 3) {
-        var prevSpot = HOLES[i - 3];
-        var gapAboveBoardPct = (spot.y + spot.r) - (prevSpot.y + prevSpot.r);
-        var maxHeightPctOfHole = (gapAboveBoardPct * 0.9 / holeHeightPct) * 100;
-        hzHeightPctOfHole = Math.min(92, maxHeightPctOfHole);
-      }
-      hitZone.style.width = hzWidthPctOfHole + "%";
-      hitZone.style.height = hzHeightPctOfHole + "%";
+      // sized to fully cover the germ (which is always 84% of the hole box, per its own
+      // width:84%+aspect-ratio:1 CSS) with margin to spare, on every row. Rows can geometrically
+      // overlap the row above them this way, but that's harmless: pointer-events is toggled on
+      // only while THIS hole's own germ is up (see popUp/miss/whack), so an inactive neighbor's
+      // hit-zone never intercepts a click meant for the active sprite.
+      hitZone.style.width = "92%";
+      hitZone.style.height = "92%";
+      hitZone.style.pointerEvents = "none";
 
       hole.appendChild(germ);
       hole.appendChild(poof);
@@ -705,7 +702,7 @@
         });
       })(i, germ, poof);
 
-      holes.push({ germ: germ, poof: poof, up: false, timer: null, index: i });
+      holes.push({ germ: germ, poof: poof, hitZone: hitZone, up: false, timer: null, index: i });
     }
   }
 
@@ -739,6 +736,7 @@
     hole.up = true;
     hole.germ.classList.remove("hit", "escaped");
     hole.germ.classList.add("up");
+    hole.hitZone.style.pointerEvents = "auto";
     difficultyStep();
     var upFor = state.upTime * (0.8 + Math.random() * 0.4);
     hole.timer = setTimeout(function () {
@@ -750,6 +748,7 @@
     hole.up = false;
     hole.germ.classList.remove("up");
     hole.germ.classList.add("escaped");
+    hole.hitZone.style.pointerEvents = "none";
     state.combo = 0;
     sfxMiss();
   }
@@ -781,6 +780,7 @@
     if (!state || !state.running || !hole.up) return;
     hole.up = false;
     clearTimeout(hole.timer);
+    hole.hitZone.style.pointerEvents = "none";
     germEl.classList.remove("up");
     germEl.classList.add("hit");
     burstConfetti(germEl.parentElement);
@@ -847,6 +847,7 @@
       h.up = false;
       clearTimeout(h.timer);
       h.germ.classList.remove("up", "hit", "escaped");
+      h.hitZone.style.pointerEvents = "none";
     });
     overlay.style.display = "none";
     sfxStart();
@@ -868,6 +869,7 @@
       clearTimeout(h.timer);
       h.up = false;
       h.germ.classList.remove("up");
+      h.hitZone.style.pointerEvents = "none";
     });
 
     var best = Number(localStorage.getItem(HIGH_KEY) || 0);
