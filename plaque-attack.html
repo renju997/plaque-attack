@@ -153,14 +153,6 @@
     color: var(--gum-deep);
   }
 
-  .tagline {
-    font-size: 0.95rem;
-    color: var(--ink-soft);
-    font-weight: 600;
-    max-width: 46ch;
-    text-wrap: balance;
-  }
-
   /* ---- HUD: patient chart ---- */
   /* ---- television cabinet ---- */
   .tv {
@@ -184,7 +176,6 @@
 
   .tv-header .eyebrow { color: #3a2213; text-shadow: 0 1px 0 rgba(255,255,255,0.25); }
   .tv-header h1 { color: #fffaf0; text-shadow: 0 2px 4px rgba(0,0,0,0.35); }
-  .tv-header .tagline { color: #3a2213; font-weight: 700; }
 
   .tv::before {
     content: "";
@@ -485,18 +476,17 @@
   button.cta:hover { filter: brightness(1.06); }
   button.cta:focus-visible, button.icon:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 
-  .controls-row {
+  .controls-col {
     display: flex;
+    flex-direction: column;
     align-items: center;
     gap: 10px;
-    width: 100%;
-    justify-content: center;
   }
 
   button.icon {
-    border: 1px solid var(--line);
-    background: var(--surface);
-    color: var(--ink);
+    border: 1px solid #3a2c18;
+    background: #1c140b;
+    color: #cbb896;
     border-radius: 999px;
     width: 44px;
     height: 44px;
@@ -508,7 +498,7 @@
     align-items: center;
     justify-content: center;
   }
-  button.icon:hover { background: var(--surface-soft); }
+  button.icon:hover { background: #241a10; }
 
   footer {
     color: var(--ink-soft);
@@ -529,7 +519,6 @@
     <header class="tv-header">
       <div class="eyebrow">Arcade &middot; Round 1</div>
       <h1>Plaque <span>Attack</span></h1>
-      <p class="tagline">Sugary snacks are sneaking through the gum line. Whack every last one before they scurry back &mdash; speed only gets worse from here.</p>
     </header>
 
     <div class="tv-panel">
@@ -558,13 +547,12 @@
           <span class="mini-label">Time</span>
           <span class="mini-value" id="timeVal">60</span>
         </div>
+        <div class="controls-col">
+          <button class="icon" id="muteBtn" title="Toggle sound" aria-label="Toggle sound">🔊</button>
+          <button class="icon" id="fullscreenBtn" title="Full screen" aria-label="Toggle full screen">⛶</button>
+        </div>
       </div>
     </div>
-  </div>
-
-  <div class="controls-row">
-    <button class="icon" id="muteBtn" title="Toggle sound" aria-label="Toggle sound">🔊</button>
-    <button class="icon" id="fullscreenBtn" title="Full screen" aria-label="Toggle full screen">⛶</button>
   </div>
 
   <footer>Tip: combos build fast &mdash; three whacks in a row starts a streak bonus.</footer>
