@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Plaque Attack</title>
 <meta name="description" content="Whack-a-mole arcade game: tap the sugary snacks before they scurry back.">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Plaque Attack">
+<meta name="theme-color" content="#120d07">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Quicksand:wght@500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -253,6 +258,30 @@
   @media (max-width: 560px) {
     .tv-panel { flex-direction: column; }
     .tv-screen-mini { width: auto; flex-direction: row; justify-content: space-around; gap: 10px; }
+
+    /* drop the decorative wood cabinet chrome so the board fills the screen edge to edge */
+    body { padding: 0 0 12px; }
+    .stage { gap: 8px; }
+    .tv {
+      background: none;
+      border: none;
+      border-radius: 0;
+      box-shadow: none;
+      padding: 0;
+    }
+    .tv::before { display: none; }
+    .tv-header { padding: 10px 14px 6px; }
+    .tv-screen-main {
+      background: none;
+      border-radius: 0;
+      padding: 0;
+      box-shadow: none;
+    }
+    .board {
+      border: none;
+      border-radius: 0;
+      box-shadow: none;
+    }
   }
 
   /* ---- board ---- */
