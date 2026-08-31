@@ -505,7 +505,7 @@
   .player-form input::placeholder { color: rgba(255, 255, 255, 0.6); }
   .player-form input#playerAge { flex: 0 0 72px; }
 
-  /* ---- results screen: score hero + dental tip ---- */
+  /* ---- results screen: chalkboard report card + dental tip ---- */
   @keyframes resultPop {
     0% { opacity: 0; transform: translateY(6px) scale(0.92); }
     100% { opacity: 1; transform: translateY(0) scale(1); }
@@ -514,56 +514,111 @@
   /* each of these sets its own `display`, which otherwise ties with (and can
      beat) the UA stylesheet's [hidden]{display:none} at equal specificity --
      this makes the hidden attribute win unconditionally */
-  .result-hero[hidden], .result-badge[hidden], .dental-tip[hidden] { display: none; }
+  .report-card[hidden], .dental-tip[hidden] { display: none; }
 
-  .result-hero {
+  .report-card {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 2px;
+    gap: 10px;
+    width: 100%;
+    max-width: 300px;
     animation: resultPop 420ms cubic-bezier(.2, .9, .3, 1.3) both;
   }
 
-  .result-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: 0.8rem;
-    color: #3a2213;
-    background: linear-gradient(180deg, var(--gold), var(--gold-deep));
-    padding: 5px 14px;
-    border-radius: 999px;
-    box-shadow: 0 8px 16px -6px rgba(0, 0, 0, 0.45);
-    margin-bottom: 4px;
-  }
-
-  .result-score {
+  .report-header {
     font-family: var(--font-display);
     font-weight: 800;
-    font-size: clamp(2.6rem, 11vw, 3.6rem);
-    line-height: 1;
-    background: linear-gradient(180deg, #ffffff, #bdf3e0);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    filter: drop-shadow(0 6px 14px rgba(31, 184, 143, 0.45));
-  }
-  .result-score.new-best {
-    background: linear-gradient(180deg, #fff6d8, var(--gold));
-    -webkit-background-clip: text;
-    background-clip: text;
-    filter: drop-shadow(0 6px 16px rgba(255, 182, 72, 0.55));
+    font-size: 1.25rem;
+    color: #fff;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
   }
 
-  .result-sub {
-    font-family: var(--font-body);
+  .report-board {
+    width: 100%;
+    background: linear-gradient(180deg, #1d3b2c, #12251b);
+    border: 3px solid #4a2f18;
+    border-radius: 10px;
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5), 0 10px 20px -8px rgba(0, 0, 0, 0.5);
+    padding: 14px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .report-row {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    font-family: var(--font-display);
+    color: #f3ead2;
+  }
+  .report-label {
+    font-size: 0.88rem;
     font-weight: 700;
-    font-size: 0.72rem;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.65);
+    white-space: nowrap;
+  }
+  .report-dots {
+    flex: 1 1 auto;
+    border-bottom: 2px dotted rgba(243, 234, 210, 0.4);
+    height: 0;
+    margin-bottom: 4px;
+    min-width: 8px;
+  }
+  .report-value {
+    font-size: 0.88rem;
+    font-weight: 700;
+    max-width: 56%;
+    text-align: right;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .report-score-value { color: #9be8c7; }
+
+  .report-row-grade { align-items: center; }
+  .report-grade-circle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.1em;
+    height: 2.1em;
+    border-radius: 50%;
+    border: 2px solid #f3ead2;
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: #f3ead2;
+    flex: 0 0 auto;
+  }
+
+  .report-banner {
+    position: relative;
+    background: #f3ead2;
+    color: var(--danger-deep);
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 0.8rem;
+    text-align: center;
+    padding: 9px 22px;
+    border-radius: 3px;
+    box-shadow: 0 6px 14px -6px rgba(0, 0, 0, 0.5);
+    margin: 2px 16px 0;
+  }
+  .report-banner::before, .report-banner::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 14px;
+    background: #e3d2ab;
+  }
+  .report-banner::before {
+    left: -14px;
+    clip-path: polygon(100% 0, 0 0, 45% 50%, 0 100%, 100% 100%);
+  }
+  .report-banner::after {
+    right: -14px;
+    clip-path: polygon(0 0, 100% 0, 55% 50%, 100% 100%, 0 100%);
   }
 
   .dental-tip {
@@ -652,10 +707,36 @@
                 <h2 id="overlayTitle">Ready to scrub in?</h2>
                 <p id="overlayText">Click or tap the snacks the instant they surface. You've got 60&#8209;seconds &mdash; whack as many as you can before the clock runs out.</p>
 
-                <div class="result-hero" id="resultHero" hidden>
-                  <div class="result-badge" id="resultBadge" hidden>🏆 New personal best!</div>
-                  <div class="result-score" id="resultScore">0</div>
-                  <div class="result-sub">points</div>
+                <div class="report-card" id="reportCard" hidden>
+                  <div class="report-header">Your Score</div>
+                  <div class="report-board">
+                    <div class="report-row">
+                      <span class="report-label">Name</span>
+                      <span class="report-dots"></span>
+                      <span class="report-value" id="reportName">&mdash;</span>
+                    </div>
+                    <div class="report-row">
+                      <span class="report-label">Age</span>
+                      <span class="report-dots"></span>
+                      <span class="report-value" id="reportAge">&mdash;</span>
+                    </div>
+                    <div class="report-row">
+                      <span class="report-label">School</span>
+                      <span class="report-dots"></span>
+                      <span class="report-value" id="reportSchool">&mdash;</span>
+                    </div>
+                    <div class="report-row report-row-grade">
+                      <span class="report-label">Grade</span>
+                      <span class="report-dots"></span>
+                      <span class="report-grade-circle" id="reportGrade">A+</span>
+                    </div>
+                    <div class="report-row">
+                      <span class="report-label">Score</span>
+                      <span class="report-dots"></span>
+                      <span class="report-value report-score-value" id="reportScoreValue">0</span>
+                    </div>
+                  </div>
+                  <div class="report-banner"><span id="reportBannerText">Golly! A perfect score!</span></div>
                 </div>
 
                 <div class="player-form" id="playerForm">
@@ -741,9 +822,13 @@
   var overlayTitle = document.getElementById("overlayTitle");
   var overlayText = document.getElementById("overlayText");
   var bestLine = document.getElementById("bestLine");
-  var resultHero = document.getElementById("resultHero");
-  var resultBadge = document.getElementById("resultBadge");
-  var resultScore = document.getElementById("resultScore");
+  var reportCard = document.getElementById("reportCard");
+  var reportName = document.getElementById("reportName");
+  var reportAge = document.getElementById("reportAge");
+  var reportSchool = document.getElementById("reportSchool");
+  var reportGrade = document.getElementById("reportGrade");
+  var reportScoreValue = document.getElementById("reportScoreValue");
+  var reportBannerText = document.getElementById("reportBannerText");
   var dentalTip = document.getElementById("dentalTip");
   var dentalTipText = document.getElementById("dentalTipText");
   var startBtn = document.getElementById("startBtn");
@@ -804,6 +889,45 @@
 
   function randomDentalTip() {
     return DENTAL_TIPS[Math.floor(Math.random() * DENTAL_TIPS.length)];
+  }
+
+  var GRADE_MESSAGES = {
+    "A+": [
+      "Golly! A perfect score!",
+      "Whoa! You aced the whole thing!",
+      "Incredible! Straight A-plus shine!",
+      "Superstar smile — nothing but net!"
+    ],
+    "A": [
+      "Great job! Almost a perfect score!",
+      "Awesome work — that's a shiny A!",
+      "Fantastic! You really know your teeth!",
+      "Nice one — A for awesome!"
+    ],
+    "B": [
+      "Solid effort! A good, honest B!",
+      "Nice work — keep that brush moving!",
+      "Good job! You're on the right track!",
+      "Not bad at all — a respectable B!"
+    ],
+    "C": [
+      "Good try! Practice makes perfect!",
+      "Keep brushing up on those skills!",
+      "Everyone starts somewhere — go again!",
+      "A start! Next round, aim even higher!"
+    ]
+  };
+
+  function gradeFor(score) {
+    if (score >= 1000) return "A+";
+    if (score >= 900) return "A";
+    if (score >= 700) return "B";
+    return "C";
+  }
+
+  function randomGradeMessage(grade) {
+    var pool = GRADE_MESSAGES[grade] || GRADE_MESSAGES["C"];
+    return pool[Math.floor(Math.random() * pool.length)];
   }
 
   var holes = [];
@@ -1164,11 +1288,19 @@
     startBtn.textContent = "Play again";
     overlay.style.display = "flex";
 
+    function fillReportCard(score) {
+      var grade = gradeFor(score);
+      reportName.textContent = state.playerName || "Anonymous";
+      reportAge.textContent = state.playerAge || "—";
+      reportSchool.textContent = state.playerSchool || "—";
+      reportGrade.textContent = grade;
+      reportScoreValue.textContent = score;
+      reportBannerText.textContent = randomGradeMessage(grade);
+      reportCard.hidden = false;
+    }
+
     function showResult(score, isNewBest, note) {
-      resultHero.hidden = false;
-      resultScore.textContent = score;
-      resultScore.classList.toggle("new-best", isNewBest);
-      resultBadge.hidden = !isNewBest;
+      fillReportCard(score);
       overlayText.textContent = (isNewBest
         ? "You just topped your own record!"
         : "Beat your best of " + best + " next time?") + (note ? " " + note : "");
@@ -1188,8 +1320,7 @@
       return;
     }
 
-    resultHero.hidden = false;
-    resultScore.textContent = localScore;
+    fillReportCard(localScore);
     overlayText.textContent = "Checking your score…";
     bestLine.textContent = "Personal best: " + best;
 
