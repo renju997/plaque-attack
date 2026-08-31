@@ -458,7 +458,7 @@
     font-weight: 700;
   }
 
-  button.cta {
+  .cta {
     margin-top: 4px;
     font-family: var(--font-display);
     font-weight: 700;
@@ -472,9 +472,12 @@
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
     box-shadow: 0 10px 22px -8px rgba(15, 139, 107, 0.55);
+    display: inline-block;
+    text-decoration: none;
+    line-height: 1.2;
   }
-  button.cta:hover { filter: brightness(1.06); }
-  button.cta:focus-visible, button.icon:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+  .cta:hover { filter: brightness(1.06); }
+  .cta:focus-visible, button.icon:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 
   .player-form {
     display: flex;
@@ -497,7 +500,7 @@
   .player-form input::placeholder { color: rgba(255, 255, 255, 0.6); }
   .player-form input#playerAge { flex: 0 0 72px; }
 
-  button.cta-secondary {
+  .cta-secondary {
     margin-top: -4px;
     background: transparent;
     box-shadow: none;
@@ -506,32 +509,7 @@
     padding: 8px 20px;
     color: #dff5ee;
   }
-  button.cta-secondary:hover { background: rgba(255, 255, 255, 0.08); filter: none; }
-
-  .leaderboard-list {
-    width: 100%;
-    max-width: 320px;
-    max-height: 40vh;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-  .leaderboard-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-family: var(--font-mono);
-    font-size: 0.85rem;
-    background: rgba(255, 255, 255, 0.08);
-    border-radius: 8px;
-    padding: 6px 10px;
-  }
-  .leaderboard-row .rank { color: var(--gold); font-weight: 700; width: 1.8em; text-align: right; }
-  .leaderboard-row .lbname { flex: 1 1 auto; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .leaderboard-row .lbage { color: #b9c9c2; font-size: 0.75rem; }
-  .leaderboard-row .lbscore { font-weight: 700; color: #7cffb2; }
-  .leaderboard-status { color: #dff5ee; font-size: 0.85rem; }
+  .cta-secondary:hover { background: rgba(255, 255, 255, 0.08); filter: none; }
 
   .controls-col {
     display: flex;
@@ -594,16 +572,7 @@
                 </div>
                 <div class="best" id="bestLine">Personal best: 0</div>
                 <button class="cta" id="startBtn">Start round</button>
-                <button class="cta cta-secondary" id="viewLeaderboardBtn" type="button">View leaderboard</button>
-              </div>
-            </div>
-            <div class="overlay" id="leaderboardOverlay" style="display:none;">
-              <div class="overlay-card">
-                <h2>Leaderboard</h2>
-                <div class="leaderboard-list" id="leaderboardList">
-                  <p class="leaderboard-status">Loading&hellip;</p>
-                </div>
-                <button class="cta" id="closeLeaderboardBtn" type="button">Back</button>
+                <a class="cta cta-secondary" id="viewLeaderboardBtn" href="/leaderboard" target="_blank" rel="noopener">View leaderboard</a>
               </div>
             </div>
           </div>
@@ -674,10 +643,6 @@
   var startBtn = document.getElementById("startBtn");
   var playerNameInput = document.getElementById("playerName");
   var playerAgeInput = document.getElementById("playerAge");
-  var viewLeaderboardBtn = document.getElementById("viewLeaderboardBtn");
-  var leaderboardOverlay = document.getElementById("leaderboardOverlay");
-  var leaderboardList = document.getElementById("leaderboardList");
-  var closeLeaderboardBtn = document.getElementById("closeLeaderboardBtn");
   var muteBtn = document.getElementById("muteBtn");
   var bgMusic = document.getElementById("bgMusic");
   bgMusic.volume = 0.35;
@@ -1111,38 +1076,6 @@
     });
   }
 
-  function renderLeaderboard(rows) {
-    if (!rows || !rows.length) {
-      leaderboardList.innerHTML = '<p class="leaderboard-status">No scores yet — be the first!</p>';
-      return;
-    }
-    var ESCAPE = { "<": "&lt;", ">": "&gt;", "&": "&amp;" };
-    leaderboardList.innerHTML = rows.map(function (r, i) {
-      var name = String(r.name || "Anonymous").replace(/[<>&]/g, function (c) { return ESCAPE[c]; });
-      var age = r.age ? " (" + Number(r.age) + ")" : "";
-      return '<div class="leaderboard-row"><span class="rank">#' + (i + 1) + '</span>' +
-        '<span class="lbname">' + name + '<span class="lbage">' + age + '</span></span>' +
-        '<span class="lbscore">' + Number(r.score) + '</span></div>';
-    }).join("");
-  }
-
-  function openLeaderboard() {
-    overlay.style.display = "none";
-    leaderboardOverlay.style.display = "flex";
-    leaderboardList.innerHTML = '<p class="leaderboard-status">Loading…</p>';
-    fetch("/api/leaderboard").then(function (res) {
-      if (!res.ok) throw new Error("bad status");
-      return res.json();
-    }).then(renderLeaderboard).catch(function () {
-      leaderboardList.innerHTML = '<p class="leaderboard-status">Couldn’t load the leaderboard right now.</p>';
-    });
-  }
-
-  viewLeaderboardBtn.addEventListener("click", openLeaderboard);
-  closeLeaderboardBtn.addEventListener("click", function () {
-    leaderboardOverlay.style.display = "none";
-    overlay.style.display = "flex";
-  });
 
   function updateBestLine() {
     var best = Number(localStorage.getItem(HIGH_KEY) || 0);

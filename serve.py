@@ -37,6 +37,8 @@ class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
         if self.path.startswith("/api/leaderboard"):
             return self._leaderboard()
+        if self.path == "/leaderboard" or self.path.startswith("/leaderboard?"):
+            self.path = "/leaderboard.html"  # mirrors vercel.json's rewrite locally
         return super().do_GET()
 
     def do_POST(self):

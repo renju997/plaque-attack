@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Plaque Attack — Leaderboard</title>
+<meta name="description" content="Top scores for Plaque Attack.">
+<meta name="theme-color" content="#120d07">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Quicksand:wght@500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-0: #f4e6c9;
+    --bg-1: #e6cf9e;
+    --surface: #fffaf0;
+    --ink: #3a2a17;
+    --ink-soft: #8a6f4d;
+    --line: #e6d2a4;
+    --gum-deep: #e2607d;
+    --accent: #1fb88f;
+    --accent-deep: #0f8b6b;
+    --gold: #ffb648;
+    --shadow: 0 12px 30px -12px rgba(58, 42, 23, 0.4);
+    --font-display: "Baloo 2", ui-rounded, "Segoe UI Rounded", system-ui, sans-serif;
+    --font-body: "Quicksand", system-ui, sans-serif;
+    --font-mono: "Space Mono", ui-monospace, "SFMono-Regular", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg-0: #1c140b; --bg-1: #120d07; --surface: #241a10;
+      --ink: #f6ecd9; --ink-soft: #c3ab84; --line: #3a2c18;
+      --gum-deep: #d9607e; --accent: #35e0b3; --accent-deep: #1fb88f; --gold: #ffc766;
+      --shadow: 0 16px 36px -14px rgba(0, 0, 0, 0.7);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg-0: #1c140b; --bg-1: #120d07; --surface: #241a10;
+    --ink: #f6ecd9; --ink-soft: #c3ab84; --line: #3a2c18;
+    --gum-deep: #d9607e; --accent: #35e0b3; --accent-deep: #1fb88f; --gold: #ffc766;
+    --shadow: 0 16px 36px -14px rgba(0, 0, 0, 0.7);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: radial-gradient(ellipse 900px 500px at 50% -10%, rgba(31, 184, 143, 0.15), transparent 60%),
+      linear-gradient(180deg, var(--bg-0), var(--bg-1));
+    color: var(--ink);
+    font-family: var(--font-body);
+    display: flex;
+    justify-content: center;
+    padding: clamp(16px, 3vw, 32px) 16px 40px;
+  }
+
+  .page {
+    width: 100%;
+    max-width: 560px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .eyebrow {
+    font-weight: 700;
+    font-size: 0.72rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent-deep);
+  }
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(1.8rem, 6vw, 2.4rem);
+    margin: 0;
+    text-align: center;
+  }
+  h1 span { color: var(--gum-deep); }
+
+  .card {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    box-shadow: var(--shadow);
+    padding: 10px;
+  }
+
+  .row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-family: var(--font-mono);
+  }
+  .row:nth-child(odd) { background: rgba(31, 184, 143, 0.07); }
+  .row .rank { color: var(--gold); font-weight: 700; width: 2.2em; text-align: right; flex: 0 0 auto; }
+  .row .name-wrap { flex: 1 1 auto; overflow: hidden; text-align: left; }
+  .row .name { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .row .age { color: var(--ink-soft); font-size: 0.75rem; font-family: var(--font-body); }
+  .row .score { font-weight: 700; color: var(--accent-deep); flex: 0 0 auto; font-size: 1.05rem; }
+  .row .rank.top-1 { color: #ffd166; }
+  .row .rank.top-2 { color: #cfd8dc; }
+  .row .rank.top-3 { color: #d7a06b; }
+
+  .status {
+    text-align: center;
+    color: var(--ink-soft);
+    font-weight: 600;
+    padding: 24px 12px;
+  }
+
+  .actions {
+    display: flex;
+    gap: 10px;
+  }
+  .btn {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #fff;
+    background: linear-gradient(180deg, var(--accent), var(--accent-deep));
+    border: none;
+    border-radius: 999px;
+    padding: 10px 22px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    box-shadow: 0 10px 22px -8px rgba(15, 139, 107, 0.45);
+  }
+  .btn:hover { filter: brightness(1.06); }
+  .btn.ghost {
+    background: transparent;
+    box-shadow: none;
+    border: 1px solid var(--line);
+    color: var(--ink);
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <div class="eyebrow">Arcade &middot; High Scores</div>
+  <h1>Plaque <span>Attack</span> Leaderboard</h1>
+
+  <div class="card">
+    <div id="list">
+      <p class="status">Loading&hellip;</p>
+    </div>
+  </div>
+
+  <div class="actions">
+    <a class="btn" href="/">Play the game</a>
+    <button class="btn ghost" id="refreshBtn" type="button">Refresh</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var list = document.getElementById("list");
+  var refreshBtn = document.getElementById("refreshBtn");
+  var ESCAPE = { "<": "&lt;", ">": "&gt;", "&": "&amp;" };
+
+  function esc(s) {
+    return String(s).replace(/[<>&]/g, function (c) { return ESCAPE[c]; });
+  }
+
+  function render(rows) {
+    if (!rows || !rows.length) {
+      list.innerHTML = '<p class="status">No scores yet — be the first!</p>';
+      return;
+    }
+    list.innerHTML = rows.map(function (r, i) {
+      var rankClass = i === 0 ? " top-1" : i === 1 ? " top-2" : i === 2 ? " top-3" : "";
+      var age = r.age ? '<span class="age"> (' + Number(r.age) + ')</span>' : "";
+      return '<div class="row">' +
+        '<span class="rank' + rankClass + '">#' + (i + 1) + '</span>' +
+        '<span class="name-wrap"><span class="name">' + esc(r.name || "Anonymous") + '</span>' + age + '</span>' +
+        '<span class="score">' + Number(r.score) + '</span>' +
+        '</div>';
+    }).join("");
+  }
+
+  function load() {
+    list.innerHTML = '<p class="status">Loading&hellip;</p>';
+    fetch("/api/leaderboard?limit=50").then(function (res) {
+      if (!res.ok) throw new Error("bad status");
+      return res.json();
+    }).then(render).catch(function () {
+      list.innerHTML = '<p class="status">Couldn’t load the leaderboard right now.</p>';
+    });
+  }
+
+  refreshBtn.addEventListener("click", load);
+  load();
+})();
+</script>
+</body>
+</html>
