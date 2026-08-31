@@ -505,6 +505,86 @@
   .player-form input::placeholder { color: rgba(255, 255, 255, 0.6); }
   .player-form input#playerAge { flex: 0 0 72px; }
 
+  /* ---- results screen: score hero + dental tip ---- */
+  @keyframes resultPop {
+    0% { opacity: 0; transform: translateY(6px) scale(0.92); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* each of these sets its own `display`, which otherwise ties with (and can
+     beat) the UA stylesheet's [hidden]{display:none} at equal specificity --
+     this makes the hidden attribute win unconditionally */
+  .result-hero[hidden], .result-badge[hidden], .dental-tip[hidden] { display: none; }
+
+  .result-hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    animation: resultPop 420ms cubic-bezier(.2, .9, .3, 1.3) both;
+  }
+
+  .result-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.8rem;
+    color: #3a2213;
+    background: linear-gradient(180deg, var(--gold), var(--gold-deep));
+    padding: 5px 14px;
+    border-radius: 999px;
+    box-shadow: 0 8px 16px -6px rgba(0, 0, 0, 0.45);
+    margin-bottom: 4px;
+  }
+
+  .result-score {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(2.6rem, 11vw, 3.6rem);
+    line-height: 1;
+    background: linear-gradient(180deg, #ffffff, #bdf3e0);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 6px 14px rgba(31, 184, 143, 0.45));
+  }
+  .result-score.new-best {
+    background: linear-gradient(180deg, #fff6d8, var(--gold));
+    -webkit-background-clip: text;
+    background-clip: text;
+    filter: drop-shadow(0 6px 16px rgba(255, 182, 72, 0.55));
+  }
+
+  .result-sub {
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 0.72rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.65);
+  }
+
+  .dental-tip {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    width: 100%;
+    max-width: 280px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 0.8rem;
+    line-height: 1.4;
+    color: #dff5ee;
+    text-align: left;
+    animation: resultPop 420ms cubic-bezier(.2, .9, .3, 1.3) both;
+    animation-delay: 80ms;
+  }
+  .dental-tip .tip-icon { font-size: 1.15rem; flex: 0 0 auto; line-height: 1.3; }
+
   .cta-secondary {
     margin-top: -4px;
     background: transparent;
@@ -571,7 +651,14 @@
               <div class="overlay-card">
                 <h2 id="overlayTitle">Ready to scrub in?</h2>
                 <p id="overlayText">Click or tap the snacks the instant they surface. You've got 60&#8209;seconds &mdash; whack as many as you can before the clock runs out.</p>
-                <div class="player-form">
+
+                <div class="result-hero" id="resultHero" hidden>
+                  <div class="result-badge" id="resultBadge" hidden>🏆 New personal best!</div>
+                  <div class="result-score" id="resultScore">0</div>
+                  <div class="result-sub">points</div>
+                </div>
+
+                <div class="player-form" id="playerForm">
                   <input type="text" id="playerName" placeholder="Your name" maxlength="24" autocomplete="off">
                   <div class="player-form-row">
                     <input type="text" id="playerSchool" placeholder="School name" maxlength="40" autocomplete="off">
@@ -579,6 +666,12 @@
                   </div>
                 </div>
                 <div class="best" id="bestLine">Personal best: 0</div>
+
+                <div class="dental-tip" id="dentalTip" hidden>
+                  <span class="tip-icon">🦷</span>
+                  <span id="dentalTipText"></span>
+                </div>
+
                 <button class="cta" id="startBtn">Start round</button>
                 <a class="cta cta-secondary" id="viewLeaderboardBtn" href="/leaderboard" target="_blank" rel="noopener">View leaderboard</a>
               </div>
@@ -648,6 +741,11 @@
   var overlayTitle = document.getElementById("overlayTitle");
   var overlayText = document.getElementById("overlayText");
   var bestLine = document.getElementById("bestLine");
+  var resultHero = document.getElementById("resultHero");
+  var resultBadge = document.getElementById("resultBadge");
+  var resultScore = document.getElementById("resultScore");
+  var dentalTip = document.getElementById("dentalTip");
+  var dentalTipText = document.getElementById("dentalTipText");
   var startBtn = document.getElementById("startBtn");
   var playerNameInput = document.getElementById("playerName");
   var playerSchoolInput = document.getElementById("playerSchool");
@@ -690,6 +788,23 @@
   playerNameInput.value = localStorage.getItem(NAME_KEY) || "";
   playerSchoolInput.value = localStorage.getItem(SCHOOL_KEY) || "";
   playerAgeInput.value = localStorage.getItem(AGE_KEY) || "";
+
+  var DENTAL_TIPS = [
+    "Brush twice, floss once — every single tooth deserves the fuss.",
+    "A two-minute brush keeps the sugar bugs hushed.",
+    "Floss like nobody's watching — your gums will thank you later.",
+    "Sugar sneaks in fast, but a good brush washes it out.",
+    "Rinse after sweets, and your smile stays hard to beat.",
+    "Change your toothbrush every few months — a tired brush can't fight plaque.",
+    "Little sips of water rinse the day's snacks away.",
+    "Gums need love too — brush gently along the gumline.",
+    "A cavity avoided is a smile multiplied.",
+    "The best toothbrush is the one that actually gets used — twice a day, every day."
+  ];
+
+  function randomDentalTip() {
+    return DENTAL_TIPS[Math.floor(Math.random() * DENTAL_TIPS.length)];
+  }
 
   var holes = [];
   var state = null;
@@ -1049,21 +1164,32 @@
     startBtn.textContent = "Play again";
     overlay.style.display = "flex";
 
+    function showResult(score, isNewBest, note) {
+      resultHero.hidden = false;
+      resultScore.textContent = score;
+      resultScore.classList.toggle("new-best", isNewBest);
+      resultBadge.hidden = !isNewBest;
+      overlayText.textContent = (isNewBest
+        ? "You just topped your own record!"
+        : "Beat your best of " + best + " next time?") + (note ? " " + note : "");
+      bestLine.textContent = "Personal best: " + best;
+      dentalTipText.textContent = randomDentalTip();
+      dentalTip.hidden = false;
+      sfxGameOver(isNewBest);
+    }
+
     if (state.mode !== "server") {
       var practiceIsNewBest = localScore > best;
       if (practiceIsNewBest) {
         try { localStorage.setItem(HIGH_KEY, String(localScore)); } catch (e) {}
         best = localScore;
       }
-      overlayText.textContent = (practiceIsNewBest
-        ? "New personal best: " + localScore + " points! Go again?"
-        : "You scored " + localScore + " points. Beat your best of " + best + "?")
-        + " (practice — not on the leaderboard)";
-      bestLine.textContent = "Personal best: " + best;
-      sfxGameOver(practiceIsNewBest);
+      showResult(localScore, practiceIsNewBest, "(practice — not on the leaderboard)");
       return;
     }
 
+    resultHero.hidden = false;
+    resultScore.textContent = localScore;
     overlayText.textContent = "Checking your score…";
     bestLine.textContent = "Personal best: " + best;
 
@@ -1082,12 +1208,7 @@
         try { localStorage.setItem(HIGH_KEY, String(finalScore)); } catch (e) {}
         best = finalScore;
       }
-      overlayText.textContent = (isNewBest
-        ? "New personal best: " + finalScore + " points! Go again?"
-        : "You scored " + finalScore + " points. Beat your best of " + best + "?")
-        + (verified ? "" : " (offline — not submitted)");
-      bestLine.textContent = "Personal best: " + best;
-      sfxGameOver(isNewBest);
+      showResult(finalScore, isNewBest, verified ? "" : "(offline — not submitted)");
     });
   }
 
