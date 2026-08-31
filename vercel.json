@@ -1,5 +1,9 @@
 {
   "rewrites": [
     { "source": "/", "destination": "/plaque-attack.html" }
-  ]
+  ],
+  "functions": {
+    "api/game.py": { "maxDuration": 10, "includeFiles": "game_engine.py" },
+    "api/leaderboard.py": { "maxDuration": 10 }
+  }
 }

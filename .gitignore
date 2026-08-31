@@ -1,1 +1,4 @@
 .DS_Store
+.vercel
+scores.jsonl
+__pycache__/
