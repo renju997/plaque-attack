@@ -481,9 +481,14 @@
 
   .player-form {
     display: flex;
+    flex-direction: column;
     gap: 8px;
     width: 100%;
     max-width: 280px;
+  }
+  .player-form-row {
+    display: flex;
+    gap: 8px;
   }
   .player-form input {
     flex: 1 1 0;
@@ -568,7 +573,10 @@
                 <p id="overlayText">Click or tap the snacks the instant they surface. You've got 60&#8209;seconds &mdash; whack as many as you can before the clock runs out.</p>
                 <div class="player-form">
                   <input type="text" id="playerName" placeholder="Your name" maxlength="24" autocomplete="off">
-                  <input type="number" id="playerAge" placeholder="Age" min="1" max="120" autocomplete="off">
+                  <div class="player-form-row">
+                    <input type="text" id="playerSchool" placeholder="School name" maxlength="40" autocomplete="off">
+                    <input type="number" id="playerAge" placeholder="Age" min="1" max="120" autocomplete="off">
+                  </div>
                 </div>
                 <div class="best" id="bestLine">Personal best: 0</div>
                 <button class="cta" id="startBtn">Start round</button>
@@ -642,6 +650,7 @@
   var bestLine = document.getElementById("bestLine");
   var startBtn = document.getElementById("startBtn");
   var playerNameInput = document.getElementById("playerName");
+  var playerSchoolInput = document.getElementById("playerSchool");
   var playerAgeInput = document.getElementById("playerAge");
   var muteBtn = document.getElementById("muteBtn");
   var bgMusic = document.getElementById("bgMusic");
@@ -675,9 +684,11 @@
   ];
   var HIGH_KEY = "plaqueAttackHighScore";
   var NAME_KEY = "plaqueAttackPlayerName";
+  var SCHOOL_KEY = "plaqueAttackPlayerSchool";
   var AGE_KEY = "plaqueAttackPlayerAge";
 
   playerNameInput.value = localStorage.getItem(NAME_KEY) || "";
+  playerSchoolInput.value = localStorage.getItem(SCHOOL_KEY) || "";
   playerAgeInput.value = localStorage.getItem(AGE_KEY) || "";
 
   var holes = [];
@@ -963,12 +974,14 @@
 
   function savePlayerInfo() {
     var name = (playerNameInput.value || "").trim().slice(0, 24);
+    var school = (playerSchoolInput.value || "").trim().slice(0, 40);
     var age = playerAgeInput.value ? Math.max(1, Math.min(120, parseInt(playerAgeInput.value, 10) || 0)) : "";
     try {
       localStorage.setItem(NAME_KEY, name);
+      localStorage.setItem(SCHOOL_KEY, school);
       localStorage.setItem(AGE_KEY, age);
     } catch (e) {}
-    return { name: name, age: age };
+    return { name: name, school: school, age: age };
   }
 
   function startGame() {
@@ -981,6 +994,7 @@
     apiGame({ action: "start" }).then(function (res) {
       state = newState();
       state.playerName = info.name;
+      state.playerSchool = info.school;
       state.playerAge = info.age;
       if (res && res.sessionId && typeof res.seed === "number") {
         state.sessionId = res.sessionId;
@@ -1058,6 +1072,7 @@
       sessionId: state.sessionId,
       taps: state.tapLog,
       name: state.playerName,
+      school: state.playerSchool,
       age: state.playerAge
     }).then(function (res) {
       var verified = res && typeof res.score === "number";

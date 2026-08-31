@@ -98,9 +98,10 @@
   }
   .row:nth-child(odd) { background: rgba(31, 184, 143, 0.07); }
   .row .rank { color: var(--gold); font-weight: 700; width: 2.2em; text-align: right; flex: 0 0 auto; }
-  .row .name-wrap { flex: 1 1 auto; overflow: hidden; text-align: left; }
+  .row .name-wrap { flex: 1 1 auto; overflow: hidden; text-align: left; display: flex; flex-direction: column; }
   .row .name { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .row .age { color: var(--ink-soft); font-size: 0.75rem; font-family: var(--font-body); }
+  .row .school { color: var(--ink-soft); font-size: 0.72rem; font-family: var(--font-body); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .row .score { font-weight: 700; color: var(--accent-deep); flex: 0 0 auto; font-size: 1.05rem; }
   .row .rank.top-1 { color: #ffd166; }
   .row .rank.top-2 { color: #cfd8dc; }
@@ -177,9 +178,10 @@
     list.innerHTML = rows.map(function (r, i) {
       var rankClass = i === 0 ? " top-1" : i === 1 ? " top-2" : i === 2 ? " top-3" : "";
       var age = r.age ? '<span class="age"> (' + Number(r.age) + ')</span>' : "";
+      var school = r.school ? '<span class="school">' + esc(r.school) + '</span>' : "";
       return '<div class="row">' +
         '<span class="rank' + rankClass + '">#' + (i + 1) + '</span>' +
-        '<span class="name-wrap"><span class="name">' + esc(r.name || "Anonymous") + '</span>' + age + '</span>' +
+        '<span class="name-wrap"><span class="name">' + esc(r.name || "Anonymous") + age + '</span>' + school + '</span>' +
         '<span class="score">' + Number(r.score) + '</span>' +
         '</div>';
     }).join("");

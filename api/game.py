@@ -77,6 +77,7 @@ class handler(BaseHTTPRequestHandler):
         sid = payload.get("sessionId")
         taps = payload.get("taps")
         name = str(payload.get("name") or "Anonymous")[:24].strip() or "Anonymous"
+        school = str(payload.get("school") or "")[:40].strip()
         try:
             age = max(1, min(120, int(payload.get("age"))))
         except (TypeError, ValueError):
@@ -98,6 +99,7 @@ class handler(BaseHTTPRequestHandler):
 
         record = {
             "name": name,
+            "school": school,
             "age": age,
             "score": result["score"],
             "hits": result["hits"],
