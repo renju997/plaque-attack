@@ -451,12 +451,6 @@
     font-size: 0.9rem;
   }
 
-  .best {
-    font-family: var(--font-mono);
-    font-size: 0.85rem;
-    color: var(--gold);
-    font-weight: 700;
-  }
 
   .cta {
     margin-top: 4px;
@@ -769,7 +763,6 @@
                     <input type="number" id="playerAge" placeholder="Age" min="1" max="120" autocomplete="off">
                   </div>
                 </div>
-                <div class="best" id="bestLine">Personal best: 0</div>
 
                 <div class="dental-tip" id="dentalTip" hidden>
                   <span class="tip-icon">🦷</span>
@@ -844,7 +837,6 @@
   var overlay = document.getElementById("overlay");
   var overlayTitle = document.getElementById("overlayTitle");
   var overlayText = document.getElementById("overlayText");
-  var bestLine = document.getElementById("bestLine");
   var reportCard = document.getElementById("reportCard");
   var reportName = document.getElementById("reportName");
   var reportAge = document.getElementById("reportAge");
@@ -1327,8 +1319,7 @@
       fillReportCard(score);
       overlayText.textContent = (isNewBest
         ? "You just topped your own record!"
-        : "Beat your best of " + best + " next time?") + (note ? " " + note : "");
-      bestLine.textContent = "Personal best: " + best;
+        : "Give it another go?") + (note ? " " + note : "");
       dentalTipText.textContent = randomDentalTip();
       dentalTip.hidden = false;
       sfxGameOver(isNewBest);
@@ -1346,7 +1337,6 @@
 
     fillReportCard(localScore);
     overlayText.textContent = "Checking your score…";
-    bestLine.textContent = "Personal best: " + best;
 
     apiGame({
       action: "finish",
@@ -1368,11 +1358,6 @@
   }
 
 
-  function updateBestLine() {
-    var best = Number(localStorage.getItem(HIGH_KEY) || 0);
-    bestLine.textContent = "Personal best: " + best;
-  }
-
   startBtn.addEventListener("click", startGame);
 
   muteBtn.addEventListener("click", function () {
@@ -1391,7 +1376,6 @@
   });
 
   buildBoard();
-  updateBestLine();
 })();
 </script>
 </body>
