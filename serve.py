@@ -15,6 +15,8 @@ import time
 import secrets
 import threading
 import datetime
+import base64
+import hmac
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 
 import game_engine
@@ -93,7 +95,37 @@ class Handler(SimpleHTTPRequestHandler):
 
         return self._json(400, {"error": "unknown action"})
 
+    def _authed(self):
+        expected_email = os.environ.get("ADMIN_EMAIL")
+        expected_password = os.environ.get("ADMIN_PASSWORD")
+        if not expected_email or not expected_password:
+            return False
+        auth = self.headers.get("Authorization", "")
+        if not auth.startswith("Basic "):
+            return False
+        try:
+            decoded = base64.b64decode(auth[6:]).decode("utf-8")
+            email, _, password = decoded.partition(":")
+        except Exception:
+            return False
+        return (
+            hmac.compare_digest(email, expected_email)
+            and hmac.compare_digest(password, expected_password)
+        )
+
     def _leaderboard(self):
+        if not self._authed():
+            # No WWW-Authenticate header on purpose -- see api/leaderboard.py's
+            # matching comment: it makes browsers pop their own native login
+            # dialog on a 401 instead of letting leaderboard.html's JS handle it.
+            self.send_response(401)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            body = json.dumps({"error": "unauthorized"}).encode("utf-8")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+            return
         rows = []
         if os.path.exists(SCORES_FILE):
             with open(SCORES_FILE) as f:

@@ -1,16 +1,22 @@
-"""Vercel serverless function: GET /api/leaderboard -- public top scores.
+"""Vercel serverless function: GET /api/leaderboard -- gated top scores.
 
-Unlike Football Fever's admin-gated /api/scores (built for moderation),
-Plaque Attack's leaderboard is meant to be shown to players in-game, so
-reading it is intentionally open -- there's no way to write to it except
-through the validated POST /api/game "finish" action, so an open read isn't
-a scoring risk.
+Requires HTTP Basic credentials matching ADMIN_EMAIL/ADMIN_PASSWORD (set as
+Vercel env vars -- no fallback default is baked in here, since this repo is
+public and a hardcoded value would be exposed in source). leaderboard.html
+prompts for email+password and sends them as an `Authorization: Basic`
+header on every request; nothing is stored server-side across requests.
 
-Env: KV_REST_API_URL/TOKEN or UPSTASH_REDIS_REST_URL/TOKEN.
+Submitting a score is unaffected -- that only ever happens through the
+validated POST /api/game "finish" action, unrelated to this gate.
+
+Env: KV_REST_API_URL/TOKEN or UPSTASH_REDIS_REST_URL/TOKEN, ADMIN_EMAIL,
+ADMIN_PASSWORD.
 """
 from http.server import BaseHTTPRequestHandler
 import os
 import json
+import base64
+import hmac
 import urllib.parse
 import urllib.request
 
@@ -33,7 +39,42 @@ def _redis(command):
 
 
 class handler(BaseHTTPRequestHandler):
+    def _authed(self):
+        expected_email = os.environ.get("ADMIN_EMAIL")
+        expected_password = os.environ.get("ADMIN_PASSWORD")
+        if not expected_email or not expected_password:
+            return False  # fail closed if the gate isn't configured
+
+        auth = self.headers.get("Authorization", "")
+        if not auth.startswith("Basic "):
+            return False
+        try:
+            decoded = base64.b64decode(auth[6:]).decode("utf-8")
+            email, _, password = decoded.partition(":")
+        except Exception:
+            return False
+
+        return (
+            hmac.compare_digest(email, expected_email)
+            and hmac.compare_digest(password, expected_password)
+        )
+
     def do_GET(self):
+        if not self._authed():
+            # No WWW-Authenticate header here on purpose: that header on a 401
+            # makes browsers intercept the response and pop up their OWN native
+            # login prompt before JS ever sees it (fetch() just hangs waiting
+            # on a dialog nothing can dismiss) -- defeating the custom login
+            # form in leaderboard.html, which handles 401s itself via JS.
+            self.send_response(401)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            body = json.dumps({"error": "unauthorized"}).encode("utf-8")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+            return
+
         q = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
         try:
             limit = max(1, min(100, int((q.get("limit") or [DEFAULT_LIMIT])[0])))

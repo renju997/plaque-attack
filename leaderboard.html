@@ -14,6 +14,7 @@
     --bg-0: #f4e6c9;
     --bg-1: #e6cf9e;
     --surface: #fffaf0;
+    --surface-soft: #fbf0da;
     --ink: #3a2a17;
     --ink-soft: #8a6f4d;
     --line: #e6d2a4;
@@ -28,14 +29,14 @@
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --bg-0: #1c140b; --bg-1: #120d07; --surface: #241a10;
+      --bg-0: #1c140b; --bg-1: #120d07; --surface: #241a10; --surface-soft: #2c2013;
       --ink: #f6ecd9; --ink-soft: #c3ab84; --line: #3a2c18;
       --gum-deep: #d9607e; --accent: #35e0b3; --accent-deep: #1fb88f; --gold: #ffc766;
       --shadow: 0 16px 36px -14px rgba(0, 0, 0, 0.7);
     }
   }
   :root[data-theme="dark"] {
-    --bg-0: #1c140b; --bg-1: #120d07; --surface: #241a10;
+    --bg-0: #1c140b; --bg-1: #120d07; --surface: #241a10; --surface-soft: #2c2013;
     --ink: #f6ecd9; --ink-soft: #c3ab84; --line: #3a2c18;
     --gum-deep: #d9607e; --accent: #35e0b3; --accent-deep: #1fb88f; --gold: #ffc766;
     --shadow: 0 16px 36px -14px rgba(0, 0, 0, 0.7);
@@ -88,6 +89,30 @@
     padding: 10px;
   }
 
+  .login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px;
+  }
+  .login-form input {
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 0.95rem;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: var(--surface-soft);
+    color: var(--ink);
+  }
+  .login-error {
+    color: var(--gum-deep);
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-align: center;
+    margin: 0;
+  }
+
   .row {
     display: flex;
     align-items: center;
@@ -114,6 +139,9 @@
     padding: 24px 12px;
   }
 
+  /* .actions sets its own `display`, which ties with (and can beat) the UA
+     stylesheet's [hidden]{display:none} at equal specificity */
+  .actions[hidden] { display: none; }
   .actions {
     display: flex;
     gap: 10px;
@@ -147,13 +175,22 @@
   <div class="eyebrow">Arcade &middot; High Scores</div>
   <h1>Plaque <span>Attack</span> Leaderboard</h1>
 
-  <div class="card">
+  <div class="card" id="loginCard">
+    <form class="login-form" id="loginForm">
+      <input type="email" id="loginEmail" placeholder="Email" autocomplete="username" required>
+      <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password" required>
+      <button class="btn" type="submit">Log in</button>
+      <p class="login-error" id="loginError" hidden>Incorrect email or password.</p>
+    </form>
+  </div>
+
+  <div class="card" id="boardCard" hidden>
     <div id="list">
       <p class="status">Loading&hellip;</p>
     </div>
   </div>
 
-  <div class="actions">
+  <div class="actions" id="actions" hidden>
     <a class="btn" href="/">Play the game</a>
     <button class="btn ghost" id="refreshBtn" type="button">Refresh</button>
   </div>
@@ -162,8 +199,14 @@
 <script>
 (function () {
   "use strict";
+  var loginCard = document.getElementById("loginCard");
+  var loginForm = document.getElementById("loginForm");
+  var loginError = document.getElementById("loginError");
+  var boardCard = document.getElementById("boardCard");
+  var actions = document.getElementById("actions");
   var list = document.getElementById("list");
   var refreshBtn = document.getElementById("refreshBtn");
+  var AUTH_KEY = "plaqueAttackLeaderboardAuth";
   var ESCAPE = { "<": "&lt;", ">": "&gt;", "&": "&amp;" };
 
   function esc(s) {
@@ -187,18 +230,55 @@
     }).join("");
   }
 
-  function load() {
+  // Tries to load the board with the given "Basic ..." auth header. Resolves
+  // true on success (and reveals the board), rejects on bad/missing creds or
+  // a network error so the caller can show a login error / re-prompt.
+  function tryLoad(header, remember) {
     list.innerHTML = '<p class="status">Loading&hellip;</p>';
-    fetch("/api/leaderboard?limit=50").then(function (res) {
-      if (!res.ok) throw new Error("bad status");
-      return res.json();
-    }).then(render).catch(function () {
-      list.innerHTML = '<p class="status">Couldn’t load the leaderboard right now.</p>';
-    });
+    return fetch("/api/leaderboard?limit=50", { headers: { Authorization: header } })
+      .then(function (res) {
+        if (res.status === 401) throw new Error("unauthorized");
+        if (!res.ok) throw new Error("bad status");
+        return res.json();
+      })
+      .then(function (rows) {
+        if (remember) { try { sessionStorage.setItem(AUTH_KEY, header); } catch (e) {} }
+        loginCard.hidden = true;
+        boardCard.hidden = false;
+        actions.hidden = false;
+        render(rows);
+      });
   }
 
-  refreshBtn.addEventListener("click", load);
-  load();
+  loginForm.addEventListener("submit", function (e) {
+    e.preventDefault();
+    loginError.hidden = true;
+    var email = document.getElementById("loginEmail").value.trim();
+    var password = document.getElementById("loginPassword").value;
+    var header = "Basic " + btoa(email + ":" + password);
+    tryLoad(header, true).catch(function () {
+      loginError.hidden = false;
+    });
+  });
+
+  refreshBtn.addEventListener("click", function () {
+    var header;
+    try { header = sessionStorage.getItem(AUTH_KEY); } catch (e) {}
+    if (!header) return;
+    tryLoad(header, false).catch(function () {
+      try { sessionStorage.removeItem(AUTH_KEY); } catch (e2) {}
+      boardCard.hidden = true;
+      actions.hidden = true;
+      loginCard.hidden = false;
+    });
+  });
+
+  // if this tab already logged in this session, skip straight to the board
+  (function () {
+    var stored;
+    try { stored = sessionStorage.getItem(AUTH_KEY); } catch (e) {}
+    if (stored) tryLoad(stored, false).catch(function () {});
+  })();
 })();
 </script>
 </body>

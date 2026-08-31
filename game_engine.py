@@ -22,6 +22,12 @@ ROUND_MS = 60000
 GRACE_MS = 220          # matches the client's post-miss "still tappable" window
 MAX_TAPS = 2000         # generous cap (well above any real 60s tap rate); defends against abuse
 
+# Per-sprite base points, in the same [donut, chocolate bar, soda cup, fries]
+# cycle order as the client's SPRITES array (hole i uses SPRITES[i % 4] there).
+# Must stay in lockstep with the `points` values on SPRITES in plaque-attack.html.
+_SPRITE_CYCLE_PTS = [20, 20, 15, 10]
+HOLE_BASE_PTS = [_SPRITE_CYCLE_PTS[i % len(_SPRITE_CYCLE_PTS)] for i in range(BOARD_HOLES)]
+
 
 def mulberry32(seed):
     state = seed & 0xFFFFFFFF
@@ -129,7 +135,7 @@ def run_session(seed, taps):
                 h.resolved = True
                 combo += 1
                 mult = 3 if combo >= 8 else 2 if combo >= 4 else 1
-                score += 10 * mult
+                score += HOLE_BASE_PTS[tap["hole"]] * mult
                 hits += 1
             # an unmatched tap is simply ignored, exactly like the client's
             # board listener finding zero clickable candidates at that point
