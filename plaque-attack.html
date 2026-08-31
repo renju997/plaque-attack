@@ -420,11 +420,20 @@
     background: rgba(10, 30, 27, 0.72);
     backdrop-filter: blur(2px);
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
+    /* "safe center": centers when the content fits, but falls back to
+       start-alignment (instead of clipping the top) when it's taller than
+       the overlay -- the report card can grow past the board's height on
+       short/mobile viewports, and this keeps the whole thing scrollable
+       rather than cutting off whatever would render above the center point */
+    justify-content: safe center;
     z-index: 30;
     border-radius: 26px;
     cursor: default;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 20px 0;
   }
 
   .overlay-card {
@@ -434,7 +443,7 @@
     flex-direction: column;
     align-items: center;
     gap: 12px;
-    padding: 20px;
+    padding: 0 20px;
   }
 
   .overlay-card h2 {
@@ -517,16 +526,16 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
+    gap: clamp(10px, 2vw, 20px);
     width: 100%;
-    max-width: 300px;
+    max-width: min(92vw, 720px);
     animation: resultPop 420ms cubic-bezier(.2, .9, .3, 1.3) both;
   }
 
   .report-header {
     font-family: var(--font-display);
     font-weight: 800;
-    font-size: 1.25rem;
+    font-size: clamp(1.7rem, 4.5vw, 3rem);
     color: #fff;
     text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
   }
@@ -535,35 +544,35 @@
     width: 100%;
     background: linear-gradient(180deg, #1d3b2c, #12251b);
     border: 3px solid #4a2f18;
-    border-radius: 10px;
+    border-radius: 14px;
     box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5), 0 10px 20px -8px rgba(0, 0, 0, 0.5);
-    padding: 14px 18px;
+    padding: clamp(18px, 3.6vw, 40px) clamp(20px, 4.5vw, 48px);
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: clamp(10px, 2vw, 20px);
   }
 
   .report-row {
     display: flex;
     align-items: baseline;
-    gap: 6px;
+    gap: clamp(6px, 1.4vw, 14px);
     font-family: var(--font-display);
     color: #f3ead2;
   }
   .report-label {
-    font-size: 0.88rem;
+    font-size: clamp(1.25rem, 3.4vw, 2.4rem);
     font-weight: 700;
     white-space: nowrap;
   }
   .report-dots {
     flex: 1 1 auto;
-    border-bottom: 2px dotted rgba(243, 234, 210, 0.4);
+    border-bottom: 3px dotted rgba(243, 234, 210, 0.4);
     height: 0;
-    margin-bottom: 4px;
+    margin-bottom: 0.4em;
     min-width: 8px;
   }
   .report-value {
-    font-size: 0.88rem;
+    font-size: clamp(1.25rem, 3.4vw, 2.4rem);
     font-weight: 700;
     max-width: 56%;
     text-align: right;
@@ -581,8 +590,8 @@
     width: 2.1em;
     height: 2.1em;
     border-radius: 50%;
-    border: 2px solid #f3ead2;
-    font-size: 0.95rem;
+    border: 3px solid #f3ead2;
+    font-size: clamp(1.35rem, 3.6vw, 2.5rem);
     font-weight: 800;
     color: #f3ead2;
     flex: 0 0 auto;
@@ -612,32 +621,33 @@
   }
 
   .report-banner {
+    --tail-w: clamp(14px, 2.6vw, 26px);
     position: relative;
     background: #f3ead2;
     color: var(--danger-deep);
     font-family: var(--font-display);
     font-weight: 800;
-    font-size: 0.8rem;
+    font-size: clamp(1.1rem, 3vw, 1.9rem);
     text-align: center;
-    padding: 9px 22px;
-    border-radius: 3px;
+    padding: clamp(11px, 2.2vw, 22px) clamp(24px, 5vw, 44px);
+    border-radius: 4px;
     box-shadow: 0 6px 14px -6px rgba(0, 0, 0, 0.5);
-    margin: 2px 16px 0;
+    margin: 2px calc(var(--tail-w) + 2px) 0;
   }
   .report-banner::before, .report-banner::after {
     content: "";
     position: absolute;
     top: 0;
     bottom: 0;
-    width: 14px;
+    width: var(--tail-w);
     background: #e3d2ab;
   }
   .report-banner::before {
-    left: -14px;
+    left: calc(var(--tail-w) * -1);
     clip-path: polygon(100% 0, 0 0, 45% 50%, 0 100%, 100% 100%);
   }
   .report-banner::after {
-    right: -14px;
+    right: calc(var(--tail-w) * -1);
     clip-path: polygon(0 0, 100% 0, 55% 50%, 100% 100%, 0 100%);
   }
 
