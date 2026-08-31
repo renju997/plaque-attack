@@ -473,6 +473,9 @@
   .cta:hover { filter: brightness(1.06); }
   .cta:focus-visible, button.icon:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 
+  /* sets its own `display`, which ties with (and can beat) the UA
+     stylesheet's [hidden]{display:none} at equal specificity */
+  .player-form[hidden] { display: none; }
   .player-form {
     display: flex;
     flex-direction: column;
@@ -508,7 +511,7 @@
   /* each of these sets its own `display`, which otherwise ties with (and can
      beat) the UA stylesheet's [hidden]{display:none} at equal specificity --
      this makes the hidden attribute win unconditionally */
-  .report-card[hidden], .dental-tip[hidden] { display: none; }
+  .report-card[hidden] { display: none; }
 
   .report-card {
     display: flex;
@@ -638,24 +641,6 @@
     clip-path: polygon(0 0, 100% 0, 55% 50%, 100% 100%, 0 100%);
   }
 
-  .dental-tip {
-    display: flex;
-    align-items: flex-start;
-    gap: 9px;
-    width: 100%;
-    max-width: 280px;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    border-radius: 12px;
-    padding: 10px 14px;
-    font-size: 0.8rem;
-    line-height: 1.4;
-    color: #dff5ee;
-    text-align: left;
-    animation: resultPop 420ms cubic-bezier(.2, .9, .3, 1.3) both;
-    animation-delay: 80ms;
-  }
-  .dental-tip .tip-icon { font-size: 1.15rem; flex: 0 0 auto; line-height: 1.3; }
 
   .cta-secondary {
     margin-top: -4px;
@@ -764,11 +749,6 @@
                   </div>
                 </div>
 
-                <div class="dental-tip" id="dentalTip" hidden>
-                  <span class="tip-icon">🦷</span>
-                  <span id="dentalTipText"></span>
-                </div>
-
                 <button class="cta" id="startBtn">Start round</button>
                 <a class="cta cta-secondary" id="viewLeaderboardBtn" href="/leaderboard" target="_blank" rel="noopener">View leaderboard</a>
               </div>
@@ -844,8 +824,6 @@
   var reportGrade = document.getElementById("reportGrade");
   var reportScoreValue = document.getElementById("reportScoreValue");
   var reportBannerText = document.getElementById("reportBannerText");
-  var dentalTip = document.getElementById("dentalTip");
-  var dentalTipText = document.getElementById("dentalTipText");
   var startBtn = document.getElementById("startBtn");
   var playerNameInput = document.getElementById("playerName");
   var playerSchoolInput = document.getElementById("playerSchool");
@@ -889,22 +867,6 @@
   playerSchoolInput.value = localStorage.getItem(SCHOOL_KEY) || "";
   playerAgeInput.value = localStorage.getItem(AGE_KEY) || "";
 
-  var DENTAL_TIPS = [
-    "Brush twice, floss once — every single tooth deserves the fuss.",
-    "A two-minute brush keeps the sugar bugs hushed.",
-    "Floss like nobody's watching — your gums will thank you later.",
-    "Sugar sneaks in fast, but a good brush washes it out.",
-    "Rinse after sweets, and your smile stays hard to beat.",
-    "Change your toothbrush every few months — a tired brush can't fight plaque.",
-    "Little sips of water rinse the day's snacks away.",
-    "Gums need love too — brush gently along the gumline.",
-    "A cavity avoided is a smile multiplied.",
-    "The best toothbrush is the one that actually gets used — twice a day, every day."
-  ];
-
-  function randomDentalTip() {
-    return DENTAL_TIPS[Math.floor(Math.random() * DENTAL_TIPS.length)];
-  }
 
   var GRADE_MESSAGES = {
     "A+": [
@@ -1313,6 +1275,7 @@
       reportScoreValue.textContent = score;
       reportBannerText.textContent = randomGradeMessage(grade);
       reportCard.hidden = false;
+      playerForm.hidden = true;
     }
 
     function showResult(score, isNewBest, note) {
@@ -1320,8 +1283,6 @@
       overlayText.textContent = (isNewBest
         ? "You just topped your own record!"
         : "Give it another go?") + (note ? " " + note : "");
-      dentalTipText.textContent = randomDentalTip();
-      dentalTip.hidden = false;
       sfxGameOver(isNewBest);
     }
 
