@@ -22,10 +22,12 @@ ROUND_MS = 60000
 GRACE_MS = 220          # matches the client's post-miss "still tappable" window
 MAX_TAPS = 2000         # generous cap (well above any real 60s tap rate); defends against abuse
 
-# Per-sprite base points, in the same [donut, chocolate bar, soda cup, fries]
-# cycle order as the client's SPRITES array (hole i uses SPRITES[i % 4] there).
-# Must stay in lockstep with the `points` values on SPRITES in plaque-attack.html.
-_SPRITE_CYCLE_PTS = [20, 20, 15, 10]
+# Per-sprite base points, in the same [donut, chocolate bar, soda cup, fries,
+# healthy tooth] cycle order as the client's SPRITES array (hole i uses
+# SPRITES[i % 5] there). Must stay in lockstep with the `points` values on
+# SPRITES in plaque-attack.html. The healthy tooth is a negative-points
+# "avoid me" sprite -- whacking it is a mistake, not a scoring hit.
+_SPRITE_CYCLE_PTS = [20, 20, 15, 10, -30]
 HOLE_BASE_PTS = [_SPRITE_CYCLE_PTS[i % len(_SPRITE_CYCLE_PTS)] for i in range(BOARD_HOLES)]
 
 
@@ -133,9 +135,16 @@ def run_session(seed, taps):
             h = holes[tap["hole"]]
             if h.is_clickable(t):
                 h.resolved = True
-                combo += 1
-                mult = 3 if combo >= 8 else 2 if combo >= 4 else 1
-                score += HOLE_BASE_PTS[tap["hole"]] * mult
+                base_pts = HOLE_BASE_PTS[tap["hole"]]
+                if base_pts < 0:
+                    # Healthy tooth: a mistake, not a combo hit -- breaks the
+                    # streak instead of extending it, no multiplier applied.
+                    combo = 0
+                    score += base_pts
+                else:
+                    combo += 1
+                    mult = 3 if combo >= 8 else 2 if combo >= 4 else 1
+                    score += base_pts * mult
                 hits += 1
             # an unmatched tap is simply ignored, exactly like the client's
             # board listener finding zero clickable candidates at that point
