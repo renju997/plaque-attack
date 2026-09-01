@@ -482,34 +482,59 @@
   .cta:hover { filter: brightness(1.06); }
   .cta:focus-visible, button.icon:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 
-  /* sets its own `display`, which ties with (and can beat) the UA
-     stylesheet's [hidden]{display:none} at equal specificity */
-  .player-form[hidden] { display: none; }
-  .player-form {
+  /* ---- entry card: same chalkboard language as the results report-card,
+     so the start screen and end screen read as one consistent design ---- */
+  .entry-card[hidden] { display: none; }
+  .entry-card {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    align-items: center;
+    gap: clamp(8px, 1.6vw, 14px);
     width: 100%;
-    max-width: 280px;
+    max-width: min(92vw, 420px);
   }
-  .player-form-row {
+  .entry-header {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(1.1rem, 3vw, 1.5rem);
+    color: #fff;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  }
+  .entry-board {
+    width: 100%;
+    background: linear-gradient(180deg, #1d3b2c, #12251b);
+    border: 3px solid #4a2f18;
+    border-radius: 14px;
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5), 0 10px 20px -8px rgba(0, 0, 0, 0.5);
+    padding: clamp(16px, 3vw, 24px);
     display: flex;
-    gap: 8px;
+    flex-direction: column;
+    gap: 10px;
   }
-  .player-form input {
+  .entry-row {
+    display: flex;
+    gap: 10px;
+  }
+  .entry-input {
     flex: 1 1 0;
     min-width: 0;
     font-family: var(--font-body);
     font-weight: 600;
-    font-size: 0.9rem;
-    padding: 10px 12px;
+    font-size: clamp(0.95rem, 2vw, 1.1rem);
+    padding: clamp(10px, 1.8vw, 14px) clamp(12px, 2vw, 16px);
     border-radius: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    background: rgba(255, 255, 255, 0.1);
-    color: #fff;
+    border: 2px solid rgba(243, 234, 210, 0.25);
+    background: rgba(0, 0, 0, 0.25);
+    color: #f3ead2;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
   }
-  .player-form input::placeholder { color: rgba(255, 255, 255, 0.6); }
-  .player-form input#playerAge { flex: 0 0 72px; }
+  .entry-input::placeholder { color: rgba(243, 234, 210, 0.45); }
+  .entry-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3), 0 0 0 3px rgba(31, 184, 143, 0.35);
+  }
+  .entry-input-age { flex: 0 0 clamp(64px, 14vw, 90px); }
 
   /* ---- results screen: chalkboard report card + dental tip ---- */
   @keyframes resultPop {
@@ -751,11 +776,14 @@
                   <div class="report-banner"><span id="reportBannerText">Golly! A perfect score!</span></div>
                 </div>
 
-                <div class="player-form" id="playerForm">
-                  <input type="text" id="playerName" placeholder="Your name" maxlength="24" autocomplete="off">
-                  <div class="player-form-row">
-                    <input type="text" id="playerSchool" placeholder="School name" maxlength="40" autocomplete="off">
-                    <input type="number" id="playerAge" placeholder="Age" min="1" max="120" autocomplete="off">
+                <div class="entry-card" id="playerForm">
+                  <div class="entry-header">Player Info</div>
+                  <div class="entry-board">
+                    <input type="text" id="playerName" class="entry-input" placeholder="Your name" maxlength="24" autocomplete="off">
+                    <div class="entry-row">
+                      <input type="text" id="playerSchool" class="entry-input" placeholder="School name" maxlength="40" autocomplete="off">
+                      <input type="number" id="playerAge" class="entry-input entry-input-age" placeholder="Age" min="1" max="120" autocomplete="off">
+                    </div>
                   </div>
                 </div>
 
@@ -827,6 +855,7 @@
   var overlay = document.getElementById("overlay");
   var overlayTitle = document.getElementById("overlayTitle");
   var overlayText = document.getElementById("overlayText");
+  var playerForm = document.getElementById("playerForm");
   var reportCard = document.getElementById("reportCard");
   var reportName = document.getElementById("reportName");
   var reportAge = document.getElementById("reportAge");
